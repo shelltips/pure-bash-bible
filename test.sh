@@ -74,28 +74,24 @@ test_head() {
     printf '%s\n%s\n\n\n' "hello" "world" > test_file
     result="$(head 2 test_file)"
     assert_equals "$result" $'hello\nworld'
-    rm test_file
 }
 
 test_tail() {
     printf '\n\n\n%s\n%s\n' "hello" "world" > test_file
     result="$(tail 2 test_file)"
     assert_equals "$result" $'hello\nworld'
-    rm test_file
 }
 
 test_lines() {
     printf '\n\n\n\n\n\n\n\n' > test_file
     result="$(lines test_file)"
     assert_equals "$result" "8"
-    rm test_file
 }
 
 test_lines_loop() {
     printf '\n\n\n\n\n\n\n\n' > test_file
     result="$(lines_loop test_file)"
     assert_equals "$result" "8"
-    rm test_file
 }
 
 test_count() {
@@ -116,6 +112,9 @@ test_basename() {
 test_hex_to_rgb() {
     result="$(hex_to_rgb "#FFFFFF")"
     assert_equals "$result" "255 255 255"
+
+    result="$(hex_to_rgb "000000")"
+    assert_equals "$result" "0 0 0"
 }
 
 test_rgb_to_hex() {
@@ -148,7 +147,6 @@ test_extract() {
     printf '{\nhello, world\n}\n' > test_file
     result="$(extract test_file "{" "}")"
     assert_equals "$result" "hello, world"
-    rm test_file
 }
 
 test_split() {
@@ -163,14 +161,14 @@ assert_equals() {
     else
         ((fail+=1))
         status=$'\e[31m✖'
-        local err="($1 != $2)"
+        local err="(\"$1\" != \"$2\")"
     fi
 
     printf ' %s\e[m | %s\n' "$status" "${FUNCNAME[1]/test_} $err"
 }
 
 main() {
-    trap 'rm readme_code' EXIT
+    trap 'rm readme_code test_file' EXIT
 
     # Extract code blocks from the README.
     while IFS=$'\n' read -r line; do
@@ -189,10 +187,10 @@ main() {
     # Generate the list of tests to run.
     IFS=$'\n' read -d "" -ra funcs < <(declare -F)
     for func in "${funcs[@]//declare -f }"; do
-        [[ "$func" == test_* ]] && { "$func"; ((tot+=1)); }
+        [[ "$func" == test_* ]] && "$func";
     done
 
-    comp="Completed $tot tests. ${pass:-0} passed, ${fail:-0} failed."
+    comp="Completed $((fail+pass)) tests. ${pass:-0} passed, ${fail:-0} failed."
     printf '%s\n%s\n\n' "${comp//?/-}" "$comp"
 
     # If a test failed, exit with '1'.

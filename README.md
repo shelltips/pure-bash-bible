@@ -17,24 +17,11 @@ src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 <img src="https://s3.amazonaws.com/titlepages.leanpub.com/bash/hero" width="40%" align="right">
 </a>
 
-The goal of this book is to document known and unknown methods of
-doing various tasks using only built-in `bash` features. Using the snippets
-from this bible can help to remove unneeded dependencies from scripts
-and in most cases make them that little bit faster. I came across these
-tips and discovered a few while developing
-[neofetch](https://github.com/dylanaraps/neofetch),
-[pxltrm](https://github.com/dylanaraps/pxltrm) and some other smaller
-projects.
+The goal of this book is to document known and unknown methods of doing various tasks using only built-in `bash` features. Using the snippets from this bible can help remove unneeded dependencies from scripts and in most cases make them faster. I came across these tips and discovered a few while developing [neofetch](https://github.com/dylanaraps/neofetch), [pxltrm](https://github.com/dylanaraps/pxltrm) and other smaller projects.
 
-The snippets below are linted using `shellcheck` and tests have been
-written where applicable. Want to contribute? Have a read of
-the
-[CONTRIBUTING.md](https://github.com/dylanaraps/pure-bash-bible/blob/master/CONTRIBUTING.md).
-It outlines how the unit tests work and what is required when adding
-snippets to the bible.
+The snippets below are linted using `shellcheck` and tests have been written where applicable. Want to contribute? Read the [CONTRIBUTING.md](https://github.com/dylanaraps/pure-bash-bible/blob/master/CONTRIBUTING.md). It outlines how the unit tests work and what is required when adding snippets to the bible.
 
-See something that is incorrectly described, buggy or outright
-wrong? Open an issue or send a pull request. If the bible is missing something, open an issue and a solution will be found.
+See something incorrectly described, buggy or outright wrong? Open an issue or send a pull request. If the bible is missing something, open an issue and a solution will be found.
 
 <br>
 <p align="center"><b>This book is also available to purchase on leanpub. https://leanpub.com/bash</b></p>
@@ -106,14 +93,25 @@ wrong? Open an issue or send a pull request. If the bible is missing something, 
 * [BRACE EXPANSION](#brace-expansion)
     * [Ranges](#ranges)
     * [String Lists](#string-lists)
-* [ARITHMETIC](#arithmetic)
+* [CONDITIONAL EXPRESSIONS](#conditional-expressions)
+    * [File Conditionals](#file-conditionals)
+    * [File Comparisons](#file-comparisons)
+    * [Variable Conditionals](#variable-conditionals)
+    * [Variable Comparisons](#variable-comparisons)
+* [ARITHMETIC OPERATORS](#arithmetic-operators)
+    * [Assignment](#assignment)
+    * [Arithmetic](#arithmetic)
+    * [Bitwise](#bitwise)
+    * [Logical](#logical)
+    * [Miscellaneous](#miscellaneous)
+* [ARITHMETIC](#arithmetic-1)
     * [Simpler syntax to set variables](#simpler-syntax-to-set-variables)
     * [Ternary Tests](#ternary-tests)
 * [TRAPS](#traps)
     * [Do something on script exit](#do-something-on-script-exit)
     * [Ignore terminal interrupt (CTRL+C, SIGINT)](#ignore-terminal-interrupt-ctrlc-sigint)
-    * [React to window resize.](#react-to-window-resize)
-    * [Do something before every command.](#do-something-before-every-command)
+    * [React to window resize](#react-to-window-resize)
+    * [Do something before every command](#do-something-before-every-command)
     * [Do something when a shell function or a sourced file finishes executing](#do-something-when-a-shell-function-or-a-sourced-file-finishes-executing)
 * [PERFORMANCE](#performance)
     * [Disable Unicode](#disable-unicode)
@@ -154,6 +152,7 @@ wrong? Open an issue or send a pull request. If the bible is missing something, 
     * [Get the list of functions in a script](#get-the-list-of-functions-in-a-script)
     * [Bypass shell aliases](#bypass-shell-aliases)
     * [Bypass shell functions](#bypass-shell-functions)
+    * [Run a command in the background](#run-a-command-in-the-background)
 * [AFTERWORD](#afterword)
 
 <!-- vim-markdown-toc -->
@@ -163,11 +162,11 @@ wrong? Open an issue or send a pull request. If the bible is missing something, 
 <!-- CHAPTER START -->
 # FOREWORD
 
-A collection of pure `bash` alternatives to external processes and programs. The `bash` scripting language is more powerful than people realise and most tasks can be accomplished without the need for or dependence on external programs.
+A collection of pure `bash` alternatives to external processes and programs. The `bash` scripting language is more powerful than people realise and most tasks can be accomplished without depending on external programs.
 
 Calling an external process in `bash` is expensive and excessive use will cause a noticeable slowdown. Scripts and programs written using built-in methods (*where applicable*) will be faster, require less dependencies and afford a better understanding of the language itself.
 
-The content of this book provides a reference for solving problems encountered when writing programs and scripts in `bash`. Examples are in function format showcasing how to incorporate these solutions into code.
+The contents of this book provide a reference for solving problems encountered when writing programs and scripts in `bash`. Examples are in function formats showcasing how to incorporate these solutions into code.
 
 <!-- CHAPTER END -->
 
@@ -540,7 +539,7 @@ if [[ "$var" == *sub_string ]]; then
     printf '%s\n' "var ends with sub_string."
 fi
 
-# Inverse (var does not start with sub_string).
+# Inverse (var does not end with sub_string).
 if [[ "$var" != *sub_string ]]; then
     printf '%s\n' "var does not end with sub_string."
 fi
@@ -929,11 +928,12 @@ Alternative to `touch`.
 
 ```shell
 # Shortest.
-:> file
+>file
 
 # Longer alternatives:
-echo -n > file
-printf '' > file
+:>file
+echo -n >file
+printf '' >file
 ```
 
 ## Extract lines between two markers
@@ -1203,6 +1203,126 @@ rm -rf ~/Downloads/{Movies,Music,ISOS}
 
 <!-- CHAPTER END -->
 
+
+<!-- CHAPTER START -->
+
+# CONDITIONAL EXPRESSIONS
+
+## File Conditionals
+
+| Expression | Value  | What does it do? |
+| ---------- | ------ | ---------------- |
+| `-a`       | `file` | If file exists.
+| `-b`       | `file` | If file exists and is a block special file.
+| `-c`       | `file` | If file exists and is a character special file.
+| `-d`       | `file` | If file exists and is a directory.
+| `-e`       | `file` | If file exists.
+| `-f`       | `file` | If file exists and is a regular file.
+| `-g`       | `file` | If file exists and its set-group-id bit is set.
+| `-h`       | `file` | If file exists and is a symbolic link.
+| `-k`       | `file` | If file exists and its sticky-bit is set
+| `-p`       | `file` | If file exists and is a named pipe (*FIFO*).
+| `-r`       | `file` | If file exists and is readable.
+| `-s`       | `file` | If file exists and its size is greater than zero.
+| `-t`       | `fd`   | If file descriptor is open and refers to a terminal.
+| `-u`       | `file` | If file exists and its set-user-id bit is set.
+| `-w`       | `file` | If file exists and is writable.
+| `-x`       | `file` | If file exists and is executable.
+| `-G`       | `file` | If file exists and is owned by the effective group ID.
+| `-L`       | `file` | If file exists and is a symbolic link.
+| `-N`       | `file` | If file exists and has been modified since last read.
+| `-O`       | `file` | If file exists and is owned by the effective user ID.
+| `-S`       | `file` | If file exists and is a socket.
+
+## File Comparisons
+
+| Expression | What does it do? |
+| ---------- | ---------------- |
+| `file -ef file2` | If both files refer to the same inode and device numbers.
+| `file -nt file2` | If `file` is newer than `file2` (*uses modification time*) or `file` exists and `file2` does not.
+| `file -ot file2` | If `file` is older than `file2` (*uses modification time*) or `file2` exists and `file` does not.
+
+## Variable Conditionals
+
+| Expression | Value | What does it do? |
+| ---------- | ----- | ---------------- |
+| `-o`       | `opt` | If shell option is enabled.
+| `-v`       | `var` | If variable has a value assigned.
+| `-R`       | `var` | If variable is a name reference.
+| `-z`       | `var` | If the length of string is zero.
+| `-n`       | `var` | If the length of string is non-zero.
+
+## Variable Comparisons
+
+| Expression | What does it do? |
+| ---------- | ---------------- |
+| `var = var2` | Equal to.
+| `var == var2` | Equal to (*synonym for `=`*).
+| `var != var2` | Not equal to.
+| `var < var2` | Less than (*in ASCII alphabetical order.*)
+| `var > var2` | Greater than (*in ASCII alphabetical order.*)
+
+<!-- CHAPTER END -->
+
+<!-- CHAPTER START -->
+
+# ARITHMETIC OPERATORS
+
+## Assignment
+
+| Operators | What does it do? |
+| --------- | ---------------- |
+| `=`       | Initialize or change the value of a variable.
+
+## Arithmetic
+
+| Operators | What does it do? |
+| --------- | ---------------- |
+| `+` | Addition
+| `-` | Subtraction
+| `*` | Multiplication
+| `/` | Division
+| `**` | Exponentiation
+| `%` | Modulo
+| `+=` | Plus-Equal (*Increment a variable.*)
+| `-=` | Minus-Equal (*Decrement a variable.*)
+| `*=` | Times-Equal (*Multiply a variable.*)
+| `/=` | Slash-Equal (*Divide a variable.*)
+| `%=` | Mod-Equal (*Remainder of dividing a variable.*)
+
+## Bitwise
+
+| Operators | What does it do? |
+| --------- | ---------------- |
+| `<<` | Bitwise Left Shift
+| `<<=` | Left-Shift-Equal
+| `>>` | Bitwise Right Shift
+| `>>=` | Right-Shift-Equal
+| `&` | Bitwise AND
+| `&=` | Bitwise AND-Equal
+| `\|` | Bitwise OR
+| `\|=` | Bitwise OR-Equal
+| `~` | Bitwise NOT
+| `^` | Bitwise XOR
+| `^=` | Bitwise XOR-Equal
+
+## Logical
+
+| Operators | What does it do? |
+| --------- | ---------------- |
+| `!` | NOT
+| `&&` | AND
+| `\|\|` | OR
+
+## Miscellaneous
+
+| Operators | What does it do? | Example |
+| --------- | ---------------- | ------- |
+| `,` | Comma Separator | `((a=1,b=2,c=3))`
+
+
+<!-- CHAPTER END -->
+
 <!-- CHAPTER START -->
 # ARITHMETIC
 
@@ -1258,14 +1378,14 @@ trap 'printf \\e[2J\\e[H\\e[m' EXIT
 trap '' INT
 ```
 
-## React to window resize.
+## React to window resize
 
 ```shell
 # Call a function on window resize.
 trap 'code_here' SIGWINCH
 ```
 
-## Do something before every command.
+## Do something before every command
 
 ```shell
 trap 'code_here' DEBUG
@@ -1532,10 +1652,9 @@ $ get_cursor_pos
 ```sh
 hex_to_rgb() {
     # Usage: hex_to_rgb "#FFFFFF"
-    ((r=16#${1:1:2}))
-    ((g=16#${1:3:2}))
-    ((b=16#${1:5:6}))
-
+    #        hex_to_rgb "000000"
+    : "${1/\#}"
+    ((r=16#${_:0:2},g=16#${_:2:2},b=16#${_:4:2}))
     printf '%s\n' "$r $g $b"
 }
 ```
@@ -1858,6 +1977,18 @@ ls
 
 # command
 command ls
+```
+
+## Run a command in the background
+
+This will run the given command and keep it running, even after the terminal or SSH connection is terminated. All output is ignored.
+
+```sh
+bkr() {
+    (nohup "$@" &>/dev/null &)
+}
+
+bkr ./some_script.sh # some_script.sh is now running in the background
 ```
 
 <!-- CHAPTER END -->

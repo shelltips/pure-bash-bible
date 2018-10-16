@@ -1,78 +1,51 @@
-# INFORMATION ABOUT THE TERMINAL
+# OBSOLETE SYNTAX
 
-## Get the terminal size in lines and columns (*from a script*)
+## Shebang
 
-This is handy when writing scripts in pure bash and `stty`/`tput` can’t be
-called.
+Use `#!/usr/bin/env bash` instead of `#!/bin/bash`.
 
-**Example Function:**
-
-```sh
-get_term_size() {
-    # Usage: get_term_size
-
-    # (:;:) is a micro sleep to ensure the variables are
-    # exported immediately.
-    shopt -s checkwinsize; (:;:)
-    printf '%s\n' "$LINES $COLUMNS"
-}
-```
-
-**Example Usage:**
+- The former searches the user's `PATH` to find the `bash` binary.
+- The latter assumes it is always installed to `/bin/` which can cause issues.
 
 ```shell
-# Output: LINES COLUMNS
-$ get_term_size
-15 55
+# Right:
+
+    #!/usr/bin/env bash
+
+# Wrong:
+
+    #!/bin/bash
 ```
 
-## Get the terminal size in pixels
+## Command Substitution
 
-**CAVEAT**: This does not work in some terminal emulators.
-
-**Example Function:**
-
-```sh
-get_window_size() {
-    # Usage: get_window_size
-    printf '%b' "${TMUX:+\\ePtmux;\\e}\\e[14t${TMUX:+\\e\\\\}"
-    IFS=';t' read -d t -t 0.05 -sra term_size
-    printf '%s\n' "${term_size[1]}x${term_size[2]}"
-}
-```
-
-**Example Usage:**
+Use `$()` instead of `` ` ` ``.
 
 ```shell
-# Output: WIDTHxHEIGHT
-$ get_window_size
-1200x800
+# Right.
+var="$(command)"
 
-# Output (fail):
-$ get_window_size
-x
+# Wrong.
+var=`command`
+
+# $() can easily be nested whereas `` cannot.
+var="$(command "$(command)")"
 ```
 
-## Get the current cursor position
+## Function Declaration
 
-This is useful when creating a TUI in pure bash.
-
-**Example Function:**
-
-```sh
-get_cursor_pos() {
-    # Usage: get_cursor_pos
-    IFS='[;' read -p $'\e[6n' -d R -rs _ y x _
-    printf '%s\n' "$x $y"
-}
-```
-
-**Example Usage:**
+Do not use the `function` keyword, it reduces compatibility with older versions of `bash`.
 
 ```shell
-# Output: X Y
-$ get_cursor_pos
-1 8
+# Right.
+do_something() {
+    # ...
+}
+
+# Wrong.
+function do_something() {
+    # ...
+}
 ```
 
 <!-- CHAPTER END -->
